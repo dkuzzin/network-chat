@@ -1,4 +1,4 @@
-package ru.nsu.ccfit.kuzin.exception;
+package ru.nsu.ccfit.kuzin.common.exception;
 
 public class ProtocolException extends RuntimeException {
     public ProtocolException(String message) {

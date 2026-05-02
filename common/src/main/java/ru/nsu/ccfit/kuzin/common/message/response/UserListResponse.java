@@ -1,4 +1,4 @@
-package ru.nsu.ccfit.kuzin.message.response;
+package ru.nsu.ccfit.kuzin.common.message.response;
 
 import java.util.List;
 

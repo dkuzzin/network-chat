@@ -1,6 +1,6 @@
-package ru.nsu.ccfit.kuzin.protocol;
+package ru.nsu.ccfit.kuzin.common.protocol;
 
-import ru.nsu.ccfit.kuzin.message.Message;
+import ru.nsu.ccfit.kuzin.common.message.Message;
 
 import java.io.IOException;
 

@@ -1,7 +1,7 @@
-package ru.nsu.ccfit.kuzin.protocol.object;
+package ru.nsu.ccfit.kuzin.common.protocol.object;
 
-import ru.nsu.ccfit.kuzin.message.Message;
-import ru.nsu.ccfit.kuzin.protocol.ProtocolWriter;
+import ru.nsu.ccfit.kuzin.common.message.Message;
+import ru.nsu.ccfit.kuzin.common.protocol.ProtocolWriter;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
