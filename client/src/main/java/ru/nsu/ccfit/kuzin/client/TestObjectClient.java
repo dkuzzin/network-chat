@@ -1,5 +1,6 @@
 package ru.nsu.ccfit.kuzin.client;
 
+import ru.nsu.ccfit.kuzin.common.message.Message;
 import ru.nsu.ccfit.kuzin.common.message.command.LoginCommand;
 import ru.nsu.ccfit.kuzin.common.protocol.ProtocolReader;
 import ru.nsu.ccfit.kuzin.common.protocol.ProtocolWriter;
@@ -16,8 +17,9 @@ public class TestObjectClient {
             ProtocolReader reader = new ObjectProtocolReader(socket.getInputStream());
 
             writer.write(new LoginCommand("Danil", "Test Object Client"));
+            Message response = reader.read();
 
-            System.out.println("LoginCommand sent");
+            System.out.println("Server response: " + response);
 
         } catch (IOException e) {
             System.err.println("Client error: " + e.getMessage());

@@ -12,11 +12,12 @@ public class ChatServer {
     private final ServerConfig config;
     private static final Logger logger = Logger.getLogger(ChatServer.class.getName());
     private final ExecutorService clientExecutor;
-
+    private final ChatRoom chatRoom;
 
     public ChatServer(ServerConfig config){
         this.config = config;
         this.clientExecutor = Executors.newFixedThreadPool(config.getThreadsCount());
+        this.chatRoom = new ChatRoom();
 
         if (!config.isLoggingEnabled()){
             logger.setLevel(Level.OFF);
@@ -33,7 +34,7 @@ public class ChatServer {
                 clientSocket.setSoTimeout(config.getClientTimeoutMs());
                 logger.info("Client connected: " + clientSocket.getRemoteSocketAddress());
 
-                ClientHandler handler  = new ClientHandler(logger, clientSocket);
+                ClientHandler handler  = new ClientHandler(logger, clientSocket, chatRoom);
                 clientExecutor.submit(handler);
             }
         } catch (IOException e) {
