@@ -29,7 +29,8 @@ public class ChatServer {
             logger.info("Server started on port " + config.getPort());
             logger.info("Waiting for clients...");
 
-            while (true){
+            while (true){ //todo Может быть есть более дипломатичный способ остановки сервера чем ctrl+c
+
                 Socket clientSocket = serverSocket.accept();
                 clientSocket.setSoTimeout(config.getClientTimeoutMs());
                 logger.info("Client connected: " + clientSocket.getRemoteSocketAddress());

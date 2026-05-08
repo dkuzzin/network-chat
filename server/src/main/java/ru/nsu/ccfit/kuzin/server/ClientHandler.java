@@ -20,7 +20,7 @@ public class ClientHandler implements Runnable{
     private final Socket socket;
     private SocketAddress clientAddress;
     private final ChatRoom chatRoom;
-
+    private ClientSession session;
     public ClientHandler(Logger logger, Socket socket, ChatRoom chatRoom){
         this.socket = socket;
         this.logger = logger;
@@ -44,6 +44,7 @@ public class ClientHandler implements Runnable{
             throw new RuntimeException(e);//todo
         } finally {
             closeSocket();
+            chatRoom.disconnect(session);
         }
     }
 
@@ -58,7 +59,7 @@ public class ClientHandler implements Runnable{
     private void handleLogin(LoginCommand command, ProtocolWriter writer) throws IOException{
         ChatResult<ClientSession> result = chatRoom.login(command.name(), command.clientType(), writer);
         if (result.isSuccess()){
-            ClientSession session = result.getValue();
+            session = result.getValue();
             writer.write(new SuccessResponse(session.getSessionId()));
             logger.info("User logged in: " + session.getName());
         }else{
