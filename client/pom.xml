@@ -8,7 +8,13 @@
         <artifactId>NetworkChat</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
+    <dependencies>
+        <dependency>
+            <groupId>ru.nsu.ccfit.kuzin</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
     <artifactId>client</artifactId>
 
     <properties>

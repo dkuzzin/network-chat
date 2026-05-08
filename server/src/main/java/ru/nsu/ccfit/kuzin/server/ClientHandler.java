@@ -1,5 +1,11 @@
 package ru.nsu.ccfit.kuzin.server;
 
+import ru.nsu.ccfit.kuzin.common.message.Message;
+import ru.nsu.ccfit.kuzin.common.protocol.ProtocolReader;
+import ru.nsu.ccfit.kuzin.common.protocol.ProtocolWriter;
+import ru.nsu.ccfit.kuzin.common.protocol.object.ObjectProtocolReader;
+import ru.nsu.ccfit.kuzin.common.protocol.object.ObjectProtocolWriter;
+
 import java.io.IOException;
 import java.net.Socket;
 
@@ -21,11 +27,16 @@ public class ClientHandler implements Runnable{
         clientAddress = socket.getRemoteSocketAddress();
         logger.info("Client handler started: " + clientAddress);
         try{
-            Thread.sleep(5000);
-        }catch (InterruptedException e){
-            Thread.currentThread().interrupt();
-            logger.warning("Client handler interrupted");
-        }finally {
+            ProtocolWriter writer = new ObjectProtocolWriter(socket.getOutputStream());
+            ProtocolReader reader = new ObjectProtocolReader(socket.getInputStream());
+
+            Message message = reader.read();
+
+            logger.info("Received message from " + clientAddress + ": " + message);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
             closeSocket();
         }
     }
