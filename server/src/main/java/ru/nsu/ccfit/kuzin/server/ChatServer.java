@@ -17,7 +17,7 @@ public class ChatServer {
     public ChatServer(ServerConfig config){
         this.config = config;
         this.clientExecutor = Executors.newFixedThreadPool(config.getThreadsCount());
-        this.chatRoom = new ChatRoom();
+        this.chatRoom = new ChatRoom(config.getHistorySize());
 
         if (!config.isLoggingEnabled()){
             logger.setLevel(Level.OFF);

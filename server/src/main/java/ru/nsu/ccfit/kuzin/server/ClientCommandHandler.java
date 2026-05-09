@@ -6,6 +6,8 @@ import ru.nsu.ccfit.kuzin.common.message.command.ListCommand;
 import ru.nsu.ccfit.kuzin.common.message.command.LoginCommand;
 import ru.nsu.ccfit.kuzin.common.message.command.LogoutCommand;
 import ru.nsu.ccfit.kuzin.common.message.event.MessageEvent;
+import ru.nsu.ccfit.kuzin.common.message.event.UserLoginEvent;
+import ru.nsu.ccfit.kuzin.common.message.event.UserLogoutEvent;
 import ru.nsu.ccfit.kuzin.common.message.response.*;
 import ru.nsu.ccfit.kuzin.common.protocol.*;
 import ru.nsu.ccfit.kuzin.common.protocol.object.*;
@@ -63,6 +65,10 @@ public class ClientCommandHandler {
 
             writer.write(new SuccessResponse(session.getSessionId()));
 
+            sendHistoryToClient();
+
+            chatRoom.broadcastExcept(new UserLoginEvent(session.getName()), session.getSessionId());
+
             logger.info("User logged in: " + session.getName());
         } else {
             writer.write(new ErrorResponse(result.getErrorMessage()));
@@ -80,13 +86,13 @@ public class ClientCommandHandler {
             return;
         }
 
-        logger.info("User logged out: " + session.getName());
-
+        String name = session.getName();
         disconnectCurrentSession();
 
         writer.write(new SuccessResponse(null));
-
         running = false;
+
+        logger.info("User logged out: " + name);
     }
 
     private void handleList(ListCommand command) throws IOException {
@@ -134,10 +140,20 @@ public class ClientCommandHandler {
     }
 
     public void disconnectCurrentSession() {
-        if (session != null) {
-            chatRoom.disconnect(session);
-            session = null;
+        if (session == null){
+            return;
         }
+
+        String name = session.getName();
+        String sessionId = session.getSessionId();
+
+        boolean disconnected = chatRoom.disconnect(session);
+        session = null;
+
+        if (disconnected){
+            chatRoom.broadcastExcept(new UserLogoutEvent(name), sessionId);
+        }
+
     }
 
     private boolean rejectIfNotLoggedIn() throws IOException {
@@ -156,5 +172,11 @@ public class ClientCommandHandler {
         }
 
         return false;
+    }
+
+    private void sendHistoryToClient() throws IOException{
+        for (MessageEvent event: chatRoom.getMessageHistory()){
+            writer.write(event);
+        }
     }
 }
