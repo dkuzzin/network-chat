@@ -10,16 +10,19 @@ public class ServerConfig {
     private final int historySize;
     private final int clientTimeoutMs;
     private final int threadCount;
-
+    private final int maxNameSize;
+    private final int maxMessageSize;
     private static final String CONFIG_PATH = "server.properties";
 
     public ServerConfig(int port, boolean loggingEnabled,
-                        int historySize, int clientTimeoutMs, int threadCount){
+                        int historySize, int clientTimeoutMs, int threadCount, int maxNameSize, int maxMessageSize){
         this.port = port;
         this.loggingEnabled = loggingEnabled;
         this.historySize = historySize;
         this.clientTimeoutMs = clientTimeoutMs;
         this.threadCount = threadCount;
+        this.maxNameSize = maxNameSize;
+        this.maxMessageSize = maxMessageSize;
     }
 
     public static ServerConfig load(){
@@ -31,7 +34,7 @@ public class ServerConfig {
                 properties.load(inputStream);
             }
         }catch (IOException e){
-            throw new IllegalStateException("Failed to load server config: " + CONFIG_PATH, e);//todo свое или
+            throw new IllegalStateException("Failed to load server config: " + CONFIG_PATH, e);
         }
 
         int port = Integer.parseInt(properties.getProperty("port", "8080"));
@@ -39,7 +42,16 @@ public class ServerConfig {
         int historySize = Integer.parseInt(properties.getProperty("history.size", "20"));
         int clientTimeoutMs = Integer.parseInt(properties.getProperty("client.timeout.ms", "120000"));
         int threadCount = Integer.parseInt(properties.getProperty("client.thread.count", "100"));
-        return new ServerConfig(port, loggingEnabled, historySize, clientTimeoutMs, threadCount);
+        int maxNameSize = Integer.parseInt(properties.getProperty("name.maxSize", "20"));
+        int maxMessageSize = Integer.parseInt(properties.getProperty("message.maxSize", "1000"));
+        if (maxNameSize <= 0) {
+            throw new IllegalArgumentException("max.name.length must be positive");
+        }
+
+        if (maxMessageSize <= 0) {
+            throw new IllegalArgumentException("max.message.length must be positive");
+        }
+        return new ServerConfig(port, loggingEnabled, historySize, clientTimeoutMs, threadCount, maxNameSize, maxMessageSize);
     }
 
     public int getPort(){
@@ -59,4 +71,12 @@ public class ServerConfig {
     }
 
     public int getThreadsCount(){return threadCount;}
+
+    public int getMaxNameSize() {
+        return maxNameSize;
+    }
+
+    public int getMaxMessageSize() {
+        return maxMessageSize;
+    }
 }

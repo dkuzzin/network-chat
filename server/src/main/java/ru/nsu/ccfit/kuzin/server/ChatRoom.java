@@ -12,18 +12,19 @@ import java.util.logging.Logger;
 public class ChatRoom {
     private final Map<String, ClientSession> sessionsById = new HashMap<>();
     private final Map<String, ClientSession> sessionsByName = new HashMap<>();
-    private static final int MAX_NAME_LENGTH = 20; //TODO анести в конфиг
-    private static final int MAX_MESSAGE_LENGTH = 1000;
+    private final int maxNameLength;
+    private final int maxMessageLength;
     private static final Logger logger = Logger.getLogger(ChatRoom.class.getName());
     private final MessageHistory messageHistory;
 
-    public ChatRoom(int historySize){
+    public ChatRoom(int historySize, int maxNameLength, int maxMessageLength) {
         this.messageHistory = new MessageHistory(historySize);
+        this.maxNameLength = maxNameLength;
+        this.maxMessageLength = maxMessageLength;
     }
 
-
     public synchronized ChatResult<ClientSession> login(String name, String clientType,
-                                            ProtocolWriter writer){
+                                                        ProtocolWriter writer){
 
         ChatResult<String> vapResult =  validateAndPrepareName(name);
         if (!vapResult.isSuccess()){
@@ -36,7 +37,7 @@ public class ChatRoom {
             return ChatResult.error("Name is already used");
         }
 
-        String sessionId = UUID.randomUUID().toString(); //todo разобраться, добавить настройку
+        String sessionId = UUID.randomUUID().toString();
         ClientSession session = new ClientSession(sessionId, normalName, clientType, writer);
 
         sessionsById.put(sessionId, session);
@@ -67,8 +68,8 @@ public class ChatRoom {
         if (trimmedName.isEmpty()){
             return ChatResult.error("Name cannot be empty");
         }
-        if (trimmedName.length() > MAX_NAME_LENGTH){
-            return ChatResult.error("Name is too long. Max length: " + MAX_NAME_LENGTH);
+        if (trimmedName.length() > maxNameLength){
+            return ChatResult.error("Name is too long. Max length: " + maxNameLength);
         }
 
         return ChatResult.success(trimmedName);
@@ -99,8 +100,8 @@ public class ChatRoom {
 
         String preparedText = text.trim();
 
-        if (preparedText.length() > MAX_MESSAGE_LENGTH){
-            return ChatResult.error("Message is too long. Max length: " + MAX_MESSAGE_LENGTH);
+        if (preparedText.length() > maxMessageLength){
+            return ChatResult.error("Message is too long. Max length: " + maxMessageLength);
         }
         MessageEvent event = new MessageEvent(sender.getName(), preparedText);
         messageHistory.add(event);

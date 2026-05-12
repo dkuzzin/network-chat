@@ -48,7 +48,7 @@ public class ClientHandler implements Runnable{
         }catch (ProtocolException e) {
             logger.warning("Protocol error from " + clientAddress + ": " + e.getMessage());
         } catch (IOException e) {
-            logger.warning("I/O error with client " + clientAddress + ": " + e.getMessage()); //todo не потеряется ли дата
+            logger.warning("I/O error with client " + clientAddress + ": " + e.getMessage());
         } finally {
             if (commandHandler != null){
                 commandHandler.disconnectCurrentSession();

@@ -17,20 +17,16 @@ public class ChatServer {
     public ChatServer(ServerConfig config){
         this.config = config;
         this.clientExecutor = Executors.newFixedThreadPool(config.getThreadsCount());
-        this.chatRoom = new ChatRoom(config.getHistorySize());
-
-        if (!config.isLoggingEnabled()){
-            logger.setLevel(Level.OFF);
-        }
+        this.chatRoom = new ChatRoom(config.getHistorySize(), config.getMaxNameSize(), config.getMaxMessageSize());
     }
 
     public void start(){
         try(ServerSocket serverSocket = new ServerSocket(config.getPort())){
+            logger.info("\n\nStart server===========================================");
             logger.info("Server started on port " + config.getPort());
             logger.info("Waiting for clients...");
 
-            while (true){ //todo Может быть есть более дипломатичный способ остановки сервера чем ctrl+c
-
+            while (true){
                 Socket clientSocket = serverSocket.accept();
                 clientSocket.setSoTimeout(config.getClientTimeoutMs());
                 logger.info("Client connected: " + clientSocket.getRemoteSocketAddress());
