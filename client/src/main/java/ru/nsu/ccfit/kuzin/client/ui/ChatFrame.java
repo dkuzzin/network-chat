@@ -71,8 +71,7 @@ public class ChatFrame extends JFrame implements
             if (client.isConnected() && client.isLoggedIn()) {
                 client.logout();
             }
-        } catch (IOException | IllegalStateException e) {
-            // Closing anyway.
+        } catch (IOException | IllegalStateException _) {
         } finally {
             client.close();
             client = null;
