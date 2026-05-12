@@ -1,4 +1,6 @@
 package ru.nsu.ccfit.kuzin.common.message.event;
 
-public record MessageEvent(String from, String text) implements Event{
+import ru.nsu.ccfit.kuzin.common.message.Event;
+
+public record MessageEvent(String from, String text) implements Event {
 }

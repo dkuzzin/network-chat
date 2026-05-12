@@ -1,4 +1,6 @@
 package ru.nsu.ccfit.kuzin.common.message.event;
 
-public record UserLoginEvent(String name) implements Event{
+import ru.nsu.ccfit.kuzin.common.message.Event;
+
+public record UserLoginEvent(String name) implements Event {
 }

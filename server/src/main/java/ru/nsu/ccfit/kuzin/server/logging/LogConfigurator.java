@@ -9,10 +9,7 @@ import java.util.logging.*;
 public final class LogConfigurator {
     private static boolean configured = false;
 
-    private LogConfigurator() {
-    }
-
-    public static synchronized void configure(Path logPath, boolean enabled) throws IOException {
+    public static void configure(Path logPath, boolean enabled) throws IOException {
         Logger rootLogger = Logger.getLogger("");
 
         if (!enabled) {
