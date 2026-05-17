@@ -30,10 +30,8 @@ public class ObjectChatClient {
     private final int port;
     private final String clientType;
     private final ChatClientListener listener;
-    private Thread readerThread;
     private String sessionId;
     private static final int CONNECT_TIMEOUT_MS = 8000;
-    private static final int SOCKET_TIMEOUT_MS = 8000;
     private Socket socket;
     private ProtocolWriter writer;
     private ProtocolReader reader;
@@ -109,7 +107,7 @@ public class ObjectChatClient {
     }
 
     private void startReaderThread() {
-        readerThread = new Thread(this::readLoop, "serverReader-thread");
+        Thread readerThread = new Thread(this::readLoop, "serverReader-thread");
         readerThread.start();
     }
 

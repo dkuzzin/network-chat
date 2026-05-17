@@ -37,7 +37,7 @@ public class ClientHandler implements Runnable{
 
             commandHandler = new ClientCommandHandler(chatRoom, writer, logger);
 
-            while (commandHandler.isRunning()){
+            while (commandHandler.isRunning()){ //TODO убрать while
                 Message message = reader.read();
                 logger.info("Received message from " + clientAddress + ": " + message);
                 commandHandler.handle(message);

@@ -1,4 +1,6 @@
-package ru.nsu.ccfit.kuzin.client.ui;
+package ru.nsu.ccfit.kuzin.client;
+
+import ru.nsu.ccfit.kuzin.client.ui.ChatFrame;
 
 import javax.swing.*;
 
@@ -10,3 +12,5 @@ public class ClientMain {
         });
     }
 }
+
+//TODO пользователь отавливался по таймауту и event history
