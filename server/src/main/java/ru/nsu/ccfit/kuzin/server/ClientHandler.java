@@ -1,6 +1,7 @@
 package ru.nsu.ccfit.kuzin.server;
 
 import ru.nsu.ccfit.kuzin.common.message.Message;
+import ru.nsu.ccfit.kuzin.common.message.event.UserLogoutEvent;
 import ru.nsu.ccfit.kuzin.common.message.response.*;
 import ru.nsu.ccfit.kuzin.common.protocol.*;
 import ru.nsu.ccfit.kuzin.common.protocol.object.*;
@@ -37,7 +38,7 @@ public class ClientHandler implements Runnable{
 
             commandHandler = new ClientCommandHandler(chatRoom, writer, logger);
 
-            while (commandHandler.isRunning()){ //TODO убрать while
+            while (commandHandler.isRunning()){
                 Message message = reader.read();
                 logger.info("Received message from " + clientAddress + ": " + message);
                 commandHandler.handle(message);
@@ -50,11 +51,17 @@ public class ClientHandler implements Runnable{
         } catch (IOException e) {
             logger.warning("I/O error with client " + clientAddress + ": " + e.getMessage());
         } finally {
-            if (commandHandler != null){
-                commandHandler.disconnectCurrentSession();
+            ClientSession session = null;
+
+            if (commandHandler != null) {
+                session = commandHandler.getSession();
             }
+            if (chatRoom.disconnect(session)) {
+                chatRoom.broadcastExcept(new UserLogoutEvent(session.getName()),session.getSessionId());
+                logger.info("User disconnected: " + session.getName());
+            }
+
             closeSocket();
-            logger.info("Client handler finished: " + clientAddress);
         }
     }
 

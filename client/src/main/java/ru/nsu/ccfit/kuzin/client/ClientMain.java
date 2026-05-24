@@ -12,5 +12,3 @@ public class ClientMain {
         });
     }
 }
-
-//TODO пользователь отавливался по таймауту и event history

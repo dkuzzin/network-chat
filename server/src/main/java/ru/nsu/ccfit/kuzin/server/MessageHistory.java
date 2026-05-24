@@ -10,13 +10,13 @@ import java.util.List;
 
 public class MessageHistory {
     private final int maxSize;
-    private final Deque<MessageEvent> messages = new ArrayDeque<>();
+    private final Deque<Message> messages = new ArrayDeque<>();
 
     public MessageHistory(int maxSize){
         this.maxSize = maxSize;
     }
 
-    public synchronized void add(MessageEvent event){
+    public synchronized void add(Message event){
         messages.addLast(event);
 
         while (messages.size() > maxSize){
@@ -24,7 +24,7 @@ public class MessageHistory {
         }
     }
 
-    public synchronized List<MessageEvent> getHistory(){
+    public synchronized List<Message> getHistory(){
         return new ArrayList<>(messages);
     }
 }

@@ -1,10 +1,7 @@
 package ru.nsu.ccfit.kuzin.server;
 
 import ru.nsu.ccfit.kuzin.common.message.Message;
-import ru.nsu.ccfit.kuzin.common.message.command.ChatMessageCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.ListCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.LoginCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.LogoutCommand;
+import ru.nsu.ccfit.kuzin.common.message.command.*;
 import ru.nsu.ccfit.kuzin.common.message.event.MessageEvent;
 import ru.nsu.ccfit.kuzin.common.message.event.UserLoginEvent;
 import ru.nsu.ccfit.kuzin.common.message.event.UserLogoutEvent;
@@ -34,6 +31,10 @@ public class ClientCommandHandler {
         this.logger = logger;
     }
 
+    public ClientSession getSession() {
+        return session;
+    }
+
     public boolean isRunning(){
         return running;
     }
@@ -44,6 +45,7 @@ public class ClientCommandHandler {
             case LogoutCommand command -> handleLogout(command);
             case ListCommand command -> handleList(command);
             case ChatMessageCommand command -> handleChatMessage(command);
+            case PingCommand command -> handlePing(command);
             default -> writer.write(new ErrorResponse("Unknown command"));
         }
     }
@@ -67,7 +69,9 @@ public class ClientCommandHandler {
 
             sendHistoryToClient();
 
-            chatRoom.broadcastExcept(new UserLoginEvent(session.getName()), session.getSessionId());
+            UserLoginEvent event = new UserLoginEvent(session.getName());
+            chatRoom.addToHistory(event);
+            chatRoom.broadcastExcept(event, session.getSessionId());
 
             logger.info("User logged in: " + session.getName());
         } else {
@@ -138,22 +142,22 @@ public class ClientCommandHandler {
 
         logger.info("Message from " + session.getName() + ": " + command.text());
     }
-
     public void disconnectCurrentSession() {
-        if (session == null){
+        if (session == null) {
             return;
         }
 
-        String name = session.getName();
-        String sessionId = session.getSessionId();
+        ClientSession oldSession = session;
 
-        boolean disconnected = chatRoom.disconnect(session);
+        boolean disconnected = chatRoom.disconnect(oldSession);
         session = null;
 
-        if (disconnected){
-            chatRoom.broadcastExcept(new UserLogoutEvent(name), sessionId);
-        }
+        if (disconnected) {
+            UserLogoutEvent event = new UserLogoutEvent(oldSession.getName());
 
+            chatRoom.addToHistory(event);
+            chatRoom.broadcastExcept(event, oldSession.getSessionId());
+        }
     }
 
     private boolean rejectIfNotLoggedIn() throws IOException {
@@ -175,8 +179,22 @@ public class ClientCommandHandler {
     }
 
     private void sendHistoryToClient() throws IOException{
-        for (MessageEvent event: chatRoom.getMessageHistory()){
+        for (Message event: chatRoom.getMessageHistory()){
             writer.write(event);
+        }
+
+        writer.write(new MessageEvent("", "[* You have joined to the chat ]"));
+    }
+
+    private void handlePing(PingCommand command) throws IOException {
+        if (session == null) {
+            writer.write(new ErrorResponse("Client is not logged in"));
+            return;
+        }
+
+        if (!session.getSessionId().equals(command.sessionId())) {
+            writer.write(new ErrorResponse("Invalid session ID"));
+            return;
         }
     }
 }

@@ -1,10 +1,7 @@
 package ru.nsu.ccfit.kuzin.client.core;
 
 import ru.nsu.ccfit.kuzin.common.message.Message;
-import ru.nsu.ccfit.kuzin.common.message.command.ChatMessageCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.ListCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.LoginCommand;
-import ru.nsu.ccfit.kuzin.common.message.command.LogoutCommand;
+import ru.nsu.ccfit.kuzin.common.message.command.*;
 import ru.nsu.ccfit.kuzin.common.message.event.MessageEvent;
 import ru.nsu.ccfit.kuzin.common.message.event.UserLoginEvent;
 import ru.nsu.ccfit.kuzin.common.message.event.UserLogoutEvent;
@@ -35,6 +32,8 @@ public class ObjectChatClient {
     private Socket socket;
     private ProtocolWriter writer;
     private ProtocolReader reader;
+    private static final int HEARTBEAT_INTERVAL_MS = 30_000;
+    private Thread heartbeatThread;
 
     //Так как другой поток может проверять, а один ставить
     private final AtomicBoolean connected = new AtomicBoolean(false);
@@ -74,15 +73,13 @@ public class ObjectChatClient {
     public void close() {
         connected.set(false);
         sessionId = null;
+        if (heartbeatThread != null) {
+            heartbeatThread.interrupt();
+            heartbeatThread = null;
+        }
+
         tryCloseSocket();
     }
-
-    public void requestUserList() throws IOException {
-        ensureLoggedIn();
-
-        writer.write(new ListCommand(sessionId));
-    }
-
 
     public boolean isConnected() {
         return connected.get();
@@ -118,15 +115,20 @@ public class ObjectChatClient {
                 handleServerMessage(message);
             }
         } catch (EOFException e) {
-            listener.onDisconnected();
+            if (connected.get()) {
+                listener.onDisconnected();
+            }
         } catch (ProtocolException e) {
-            listener.onConnectionError("Connection error: " + e.getMessage());
+            if (connected.get()) {
+                listener.onConnectionError("Protocol error: " + e.getMessage());
+            }
         } catch (IOException e) {
             if (connected.get()) {
                 listener.onConnectionError("Connection error: " + e.getMessage());
             }
         } finally {
             connected.set(false);
+            sessionId = null;
             tryCloseSocket();
         }
     }
@@ -143,21 +145,23 @@ public class ObjectChatClient {
 
     public void login(String name) throws IOException {
         ensureConnected();
-        writer.write(new LoginCommand(name, clientType));
+        sendToServer(new LoginCommand(name, clientType));
+    }
+
+    public void requestUserList() throws IOException {
+        ensureLoggedIn();
+        sendToServer(new ListCommand(sessionId));
     }
 
     public void logout() throws IOException {
         ensureLoggedIn();
-
-        writer.write(new LogoutCommand(sessionId));
-
+        sendToServer(new LogoutCommand(sessionId));
         sessionId = null;
     }
 
     public void sendMessage(String text) throws IOException {
         ensureLoggedIn();
-
-        writer.write(new ChatMessageCommand(sessionId, text));
+        sendToServer(new ChatMessageCommand(sessionId, text));
     }
 
     private void handleServerMessage(Message message) {
@@ -175,12 +179,51 @@ public class ObjectChatClient {
     private void handleSuccessResponse(SuccessResponse response) {
         if (response.sessionId() != null) {
             sessionId = response.sessionId();
+            startHeartbeatThread();
             listener.onLoginSuccess(sessionId);
+        }
+    }
+
+    private void startHeartbeatThread() {
+        if (heartbeatThread != null && heartbeatThread.isAlive()) {
+            return;
+        }
+
+        heartbeatThread = new Thread(this::heartbeatLoop, "chat-heartbeat-thread");
+        heartbeatThread.setDaemon(true);
+        heartbeatThread.start();
+    }
+
+    private void heartbeatLoop() {
+        while (connected.get() && sessionId != null) {
+            try {
+                Thread.sleep(HEARTBEAT_INTERVAL_MS);
+
+                if (connected.get() && sessionId != null) {
+                    sendToServer(new PingCommand(sessionId));
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            } catch (IOException | IllegalStateException e) {
+                connected.set(false);
+                tryCloseSocket();
+                listener.onConnectionError("Connection error: " + e.getMessage());
+                return;
+            }
         }
     }
 
     private void handleErrorResponse(String message) {
         listener.onError(message);
+    }
+
+    private void sendToServer(Message message) throws IOException {
+        ensureConnected();
+
+        synchronized (writer) {
+            writer.write(message);
+        }
     }
 
 }

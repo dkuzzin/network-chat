@@ -2,6 +2,7 @@ package ru.nsu.ccfit.kuzin.server;
 
 import ru.nsu.ccfit.kuzin.common.message.Message;
 import ru.nsu.ccfit.kuzin.common.message.event.MessageEvent;
+import ru.nsu.ccfit.kuzin.common.message.event.UserLogoutEvent;
 import ru.nsu.ccfit.kuzin.common.message.response.UserInfo;
 import ru.nsu.ccfit.kuzin.common.protocol.ProtocolWriter;
 
@@ -119,6 +120,7 @@ public class ChatRoom {
                 receiver.sendToClient(message);
             } catch (IOException e) {
                 disconnect(receiver);
+                disconnectAndNotify(receiver);
             }
         }
     }
@@ -141,16 +143,29 @@ public class ChatRoom {
                 receiver.sendToClient(message);
             }catch (IOException e){
                 logger.warning("Failed to send message to " + receiver.getName() + ": " + e.getMessage());
+                disconnectAndNotify(receiver);
                 disconnect(receiver);
             }
         }
+    }
+
+    public void addToHistory(Message message) {
+        messageHistory.add(message);
     }
 
     private String getLowerCaseName(String name){
         return name.toLowerCase(Locale.ROOT);
     }
 
-    public List<MessageEvent> getMessageHistory() {
+    public List<Message> getMessageHistory() {
         return messageHistory.getHistory();
+    }
+
+    public void disconnectAndNotify(ClientSession session) {
+        boolean disconnected = disconnect(session);
+
+        if (disconnected) {
+            broadcastExcept(new UserLogoutEvent(session.getName()), session.getSessionId());
+        }
     }
 }

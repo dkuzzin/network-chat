@@ -16,7 +16,8 @@ public class ChatServer {
 
     public ChatServer(ServerConfig config){
         this.config = config;
-        this.clientExecutor = Executors.newFixedThreadPool(config.getThreadsCount());
+        //this.clientExecutor = Executors.newFixedThreadPool(config.getThreadsCount());
+        this.clientExecutor = Executors.newVirtualThreadPerTaskExecutor();
         this.chatRoom = new ChatRoom(config.getHistorySize(), config.getMaxNameSize(), config.getMaxMessageSize());
     }
 

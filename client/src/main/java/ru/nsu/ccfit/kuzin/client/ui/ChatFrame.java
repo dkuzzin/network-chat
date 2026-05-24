@@ -24,7 +24,7 @@ public class ChatFrame extends JFrame implements
 
     private static final String LOGIN_CARD = "login";
     private static final String CHAT_CARD = "chat";
-
+    private boolean disconnectHandled = false;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel rootPanel = new JPanel(cardLayout);
 
@@ -140,13 +140,31 @@ public class ChatFrame extends JFrame implements
     @Override
     public void onLoginSuccess(String sessionId) {
         SwingUtilities.invokeLater(() -> {
+            disconnectHandled = false;
             chatPanel.clear();
             chatPanel.setConnectionInfo(currentName, currentHost, currentPort);
-            chatPanel.appendSystemMessage("You have joined the chat.");
+            //chatPanel.appendSystemMessage("You have joined the chat.");
             cardLayout.show(rootPanel, CHAT_CARD);
 
             requestUserListAfterLogin();
         });
+    }
+
+    private void handleUnexpectedDisconnect(String message) {
+        if (disconnectHandled) {
+            return;
+        }
+
+        disconnectHandled = true;
+
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                "Disconnected",
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        switchToLogin();
     }
 
     @Override
@@ -192,18 +210,16 @@ public class ChatFrame extends JFrame implements
 
     @Override
     public void onDisconnected() {
-        SwingUtilities.invokeLater(() -> {
-            chatPanel.appendSystemMessage("Disconnected from server");
-            switchToLogin();
-        });
+        SwingUtilities.invokeLater(() ->
+                handleUnexpectedDisconnect("You were disconnected from the server.")
+        );
     }
 
     @Override
     public void onConnectionError(String message) {
-        SwingUtilities.invokeLater(() -> {
-            chatPanel.appendSystemMessage(message);
-            switchToLogin();
-        });
+        SwingUtilities.invokeLater(() ->
+                handleUnexpectedDisconnect("Connection lost: " + message)
+        );
     }
 
     private void requestUserListAfterLogin() {
