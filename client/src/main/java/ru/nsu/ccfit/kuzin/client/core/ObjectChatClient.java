@@ -10,8 +10,8 @@ import ru.nsu.ccfit.kuzin.common.message.response.SuccessResponse;
 import ru.nsu.ccfit.kuzin.common.message.response.UserListResponse;
 import ru.nsu.ccfit.kuzin.common.protocol.ProtocolReader;
 import ru.nsu.ccfit.kuzin.common.protocol.ProtocolWriter;
-import ru.nsu.ccfit.kuzin.common.protocol.object.ObjectProtocolReader;
-import ru.nsu.ccfit.kuzin.common.protocol.object.ObjectProtocolWriter;
+import ru.nsu.ccfit.kuzin.common.protocol.framed.FramedProtocolReader;
+import ru.nsu.ccfit.kuzin.common.protocol.framed.FramedProtocolWriter;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -56,8 +56,8 @@ public class ObjectChatClient {
             newSocket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
 
             socket = newSocket;
-            writer = new ObjectProtocolWriter(socket.getOutputStream());
-            reader = new ObjectProtocolReader(socket.getInputStream());
+            writer = new FramedProtocolWriter(socket.getOutputStream());
+            reader = new FramedProtocolReader(socket.getInputStream());
             connected.set(true);
 
             startReaderThread();
